@@ -25,7 +25,6 @@ pipeline {
                         }
                     }
                     steps {
-                        deleteDir()
                         checkout scm
                         sh '''rm -rf _build.external install
                               utils/fetch_go_packages.sh -i .
