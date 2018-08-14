@@ -18,6 +18,9 @@ ARG UID=1000
 # Update distribution
 #Nothing to do for CentOS
 
+# openpa build/repo
+RUN yum-config-manager --add-repo=http://localhost:8080/job/daos-org/job/openpa/job/PR-1/lastSuccessfulBuild/artifact/artifacts/
+
 # Install basic tools
 RUN yum install -y epel-release
 RUN yum install -y git gcc gcc-c++ make cmake golang libtool scons boost-devel   \
@@ -26,7 +29,7 @@ RUN yum install -y git gcc gcc-c++ make cmake golang libtool scons boost-devel  
                    doxygen pandoc flex patch nasm yasm ninja-build meson         \
                    CUnit-devel libaio-devel python-pep8 lcov                     \
                    python clang-analyzer sg3_utils libiscsi-devel                \
-                   numactl-devel doxygen graphviz
+                   numactl-devel doxygen graphviz openpa-devel
 
 
 # Dependencies
