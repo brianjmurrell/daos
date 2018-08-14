@@ -27,6 +27,9 @@ pipeline {
                     steps {
                         checkout scm
                         sh '''rm -rf _build.external install
+                              pushd scons_local
+                              git pull https://review.hpdd.intel.com/coral/scons_local refs/changes/13/33013/2
+                              popd
                               git submodule update --init --recursive
                               utils/fetch_go_packages.sh -i .
                               SCONS_ARGS="--update-prereq=all --build-deps=yes USE_INSTALLED=all install"
