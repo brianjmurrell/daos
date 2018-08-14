@@ -21,6 +21,7 @@ ARG UID=1000
 # openpa build/repo
 RUN yum-config-manager --add-repo=http://localhost:8080/job/daos-org/job/openpa/job/PR-1/lastSuccessfulBuild/artifact/artifacts/
 RUN yum-config-manager --save --setopt=*_job_daos-org_job_openpa_job_PR-1_lastSuccessfulBuild_artifact_artifacts_.gpgcheck=0
+RUN for r in /etc/yum.repos.d/*; do echo "--- $r ---"; cat $r; done
 
 # Install basic tools
 RUN yum install -y epel-release
