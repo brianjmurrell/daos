@@ -27,6 +27,7 @@ pipeline {
                     steps {
                         checkout scm
                         sh '''rm -rf _build.external install
+                              git submodule update --init --recursive
                               utils/fetch_go_packages.sh -i .
                               SCONS_ARGS="--update-prereq=all --build-deps=yes USE_INSTALLED=all install"
                               if ! scons $SCONS_ARGS; then
