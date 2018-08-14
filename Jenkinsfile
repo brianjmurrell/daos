@@ -25,8 +25,10 @@ pipeline {
                         }
                     }
                     steps {
+                        deleteDir()
                         checkout scm
-                        sh '''utils/fetch_go_packages.sh -i .
+                        sh '''rm -rf _build.external install
+                              utils/fetch_go_packages.sh -i .
                               SCONS_ARGS="--update-prereq=all --build-deps=yes USE_INSTALLED=all install"
                               if ! scons $SCONS_ARGS; then
                                   if ! scons --config=force $SCONS_ARGS; then
