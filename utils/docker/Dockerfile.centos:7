@@ -19,7 +19,9 @@ ARG UID=1000
 #Nothing to do for CentOS
 
 # openpa build/repo
-RUN yum-config-manager --add-repo=http://localhost:8080/job/daos-org/job/openpa/job/PR-1/lastSuccessfulBuild/artifact/artifacts/
+RUN cat /etc/resolv.conf
+RUN ping -c 1 bmurrell-mobl
+RUN yum-config-manager --add-repo=http://bmurell-mobl:8080/job/daos-org/job/openpa/job/PR-1/lastSuccessfulBuild/artifact/artifacts/
 # sadly this doesn't work
 #RUN yum-config-manager --save --setopt=*_job_daos-org_job_openpa_job_PR-1_lastSuccessfulBuild_artifact_artifacts_.gpgcheck=0
 RUN echo "gpgcheck = False" >> /etc/yum.repos.d/8080_job_daos-org_job_openpa_job_PR-1_lastSuccessfulBuild_artifact_artifacts_.repo 
