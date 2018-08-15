@@ -26,7 +26,7 @@ pipeline {
                     }
                     steps {
                         checkout scm
-                        sh '''echo rm -rf _build.external install
+                        sh '''rm -rf _build.external install
                               pushd scons_local
                               git pull https://review.hpdd.intel.com/coral/scons_local refs/changes/13/33013/3
                               popd
