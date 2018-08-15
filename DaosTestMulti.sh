@@ -84,6 +84,11 @@ sudo rmdir $daospath" 2>&1 | dshbak -c
 ls -l "$daospath"/daos.log' EXIT
 
 sleep 1
+touch /tmp/waiting
+while [ -f /tmp/waiting ]; do
+    echo "waiting for /tmp/waiting on $HOSTNAME"
+    sleep 1
+done
 
 # shellcheck disable=SC2029
 if ! ssh "$CLIENT_VM" "daos_server_pid=\$(cat /tmp/daos_server_pid)

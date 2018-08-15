@@ -2,6 +2,8 @@
 
 set -ex
 
+exit 0
+
 if [ "$JENKINS_URL" = "http://localhost:8080/" ]; then
     NFS_SERVER="192.168.121.1"
 else
