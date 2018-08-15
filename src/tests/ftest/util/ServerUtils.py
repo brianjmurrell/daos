@@ -62,7 +62,6 @@ def runServer(hostfile, setname, basepath):
             os.path.join(build_vars["ARGOBOTS_PREFIX"], "lib") + os.pathsep + \
             os.path.join(build_vars["SPDK_PREFIX"], "lib") + os.pathsep + \
             os.path.join(build_vars["PMDK_PREFIX"], "lib") + os.pathsep + \
-            os.path.join(build_vars["OPENPA_PREFIX"], "lib") + os.pathsep + \
             os.path.join(build_vars["CART_PREFIX"], "lib") + os.pathsep + \
             os.path.join(build_vars["ISAL_PREFIX"], "lib") + os.pathsep + \
             os.path.join(build_vars["OFI_PREFIX"], "lib") + os.pathsep + \
