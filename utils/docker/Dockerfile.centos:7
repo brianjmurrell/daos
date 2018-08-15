@@ -19,8 +19,6 @@ ARG UID=1000
 #Nothing to do for CentOS
 
 # openpa build/repo
-RUN cat /etc/resolv.conf
-RUN ping -c 1 bmurrell-mobl
 RUN yum-config-manager --add-repo=http://jenkins-3.wolf.hpdd.intel.com:8080/job/daos-stack-org/job/openpa/job/master/lastSuccessfulBuild/artifact/artifacts/
 # sadly this doesn't work
 #RUN yum-config-manager --save --setopt=*_job_daos-stack-org_job_openpa_job_master_lastSuccessfulBuild_artifact_artifacts_.gpgcheck=0
