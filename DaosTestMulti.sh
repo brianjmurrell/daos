@@ -83,7 +83,7 @@ done
 sudo rmdir $daospath" 2>&1 | dshbak -c
 ls -l "$daospath"/daos.log' EXIT
 
-sleep 1
+sleep 5
 touch /tmp/waiting
 while [ -f /tmp/waiting ]; do
     echo "waiting for /tmp/waiting on $HOSTNAME"
