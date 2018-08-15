@@ -2,7 +2,8 @@
 
 set -ex
 
-HOSTPREFIX="wolf-53"
+#HOSTPREFIX="wolf-53"
+env
 
 # leave this empty to run on the centos7 builder
 CLIENT_VM=${HOSTPREFIX}vm1

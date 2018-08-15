@@ -2,7 +2,8 @@
 
 set -ex
 
-HOSTPREFIX="wolf-53"
+env
+#HOSTPREFIX="wolf-53"
 
 trap 'echo "exited with error"' ERR
 
@@ -46,7 +47,7 @@ rm -rf src/tests/ftest/avocado
 mkdir -p src/tests/ftest/avocado/job-results
 
 DAOS_BASE=${SL_OMPI_PREFIX%/install}
-pdsh -R ssh -S -w ${HOSTPREFIX}vm[1-8] "set -x
+pdsh -R ssh -S -w "${HOSTPREFIX}"vm[1-8] "set -x
 sudo mkdir -p $DAOS_BASE
 sudo mount -t nfs ${HOSTPREFIX}:$PWD $DAOS_BASE" 2>&1 | dshbak -c
 
@@ -54,7 +55,7 @@ sudo mount -t nfs ${HOSTPREFIX}:$PWD $DAOS_BASE" 2>&1 | dshbak -c
 trap 'set +e; restore_dist_files "${yaml_files[@]}"; pdsh -R ssh -S -w ${HOSTPREFIX}vm[1-8] "x=0; while [ \$x -lt 30 ] && grep $DAOS_BASE /proc/mounts && ! sudo umount $DAOS_BASE; do sleep 1; let x=\$x+1; done; sudo rmdir $DAOS_BASE" 2>&1 | dshbak -c' EXIT
 
 # shellcheck disable=SC2029
-ssh ${HOSTPREFIX}vm1 "set -x
+ssh "${HOSTPREFIX}"vm1 "set -x
 pwd
 rm -rf $DAOS_BASE/install/tmp
 cd $DAOS_BASE
