@@ -2,8 +2,12 @@
 
 set -ex
 
-#HOSTPREFIX="wolf-53"
-env
+if [ "$JENKINS_URL" = "http://localhost:8080/" ]; then
+    NFS_SERVER="192.168.121.1"
+else
+    HOSTPREFIX="wolf-53"
+fi
+NFS_SERVER=${NFS_SERVER:-$HOSTPREFIX}
 
 # leave this empty to run on the centos7 builder
 CLIENT_VM=${HOSTPREFIX}vm1
@@ -48,7 +52,7 @@ else
     fi
 fi
 sudo mkdir -p $daospath
-sudo mount -t nfs ${HOSTPREFIX:-bmurrell-mobl}:$PWD $daospath
+sudo mount -t nfs $NFS_SERVER:$PWD $daospath
 sudo mount -t tmpfs -o size=16G tmpfs /mnt/daos
 df -h /mnt/daos" 2>&1 | dshbak -c
 
@@ -88,7 +92,7 @@ if ! ssh "$CLIENT_VM" "daos_server_pid=\$(cat /tmp/daos_server_pid)
     fi
     # cmocka's XML results are not JUnit compliant as it creates multiple
     # <testsuites> blocks and only one is allowed
-    trap 'set -x; cat "${daospath}"/results.xml; sed -i -e '\"'\"'2!{/<testsuites>/d;}'\"'\"' -e '\"'\"'\$!{/<\/testsuites>/d;}'\"'\"' "${daospath}"/results.xml; cat "${daospath}"/results.xml;' EXIT
+    trap 'set -x; cat \"${daospath}\"/results.xml; sed -i -e '\"'\"'2!{/<testsuites>/d;}'\"'\"' -e '\"'\"'\$!{/<\\/testsuites>/d;}'\"'\"' \"${daospath}\"/results.xml; cat \"${daospath}\"/results.xml;' EXIT
     rm -f \"${daospath}\"/results.xml
     CMOCKA_XML_FILE=\"${daospath}\"/results.xml CMOCKA_MESSAGE_OUTPUT=xml \"${daospath}\"/install/bin/orterun --output-filename \"$daospath\"/daos_test.out --np 1 --ompi-server file:\"$daospath\"/urifile -x ABT_ENV_MAX_NUM_XSTREAMS=100 -x PATH=\"$PATH\" -x CRT_PHY_ADDR_STR=\"$CRT_PHY_ADDR_STR\" -x ABT_MAX_NUM_XSTREAMS=100 -x LD_LIBRARY_PATH=\"$LD_LIBRARY_PATH\" -x D_LOG_FILE=\"$daospath\"/daos.log -x OFI_INTERFACE=\"$CLIENT_OFI_INTERFACE\" daos_test \"$TESTS\""; then
     if [ "${PIPESTATUS[0]}" = 199 ]; then

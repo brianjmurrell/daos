@@ -2,8 +2,12 @@
 
 set -ex
 
-env
-#HOSTPREFIX="wolf-53"
+if [ "$JENKINS_URL" = "http://localhost:8080/" ]; then
+    NFS_SERVER="192.168.121.1"
+else
+    HOSTPREFIX="wolf-53"
+fi
+NFS_SERVER=${NFS_SERVER:-$HOSTPREFIX}
 
 trap 'echo "exited with error"' ERR
 
@@ -49,7 +53,7 @@ mkdir -p src/tests/ftest/avocado/job-results
 DAOS_BASE=${SL_OMPI_PREFIX%/install}
 pdsh -R ssh -S -w "${HOSTPREFIX}"vm[1-8] "set -x
 sudo mkdir -p $DAOS_BASE
-sudo mount -t nfs ${HOSTPREFIX:-bmurrell-mobl}:$PWD $DAOS_BASE" 2>&1 | dshbak -c
+sudo mount -t nfs $NFS_SERVER:$PWD $DAOS_BASE" 2>&1 | dshbak -c
 
 # shellcheck disable=SC2154
 trap 'set +e; restore_dist_files "${yaml_files[@]}"; pdsh -R ssh -S -w ${HOSTPREFIX}vm[1-8] "x=0; while [ \$x -lt 30 ] && grep $DAOS_BASE /proc/mounts && ! sudo umount $DAOS_BASE; do sleep 1; let x=\$x+1; done; sudo rmdir $DAOS_BASE" 2>&1 | dshbak -c' EXIT
