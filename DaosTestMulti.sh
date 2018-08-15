@@ -48,7 +48,7 @@ else
     fi
 fi
 sudo mkdir -p $daospath
-sudo mount -t nfs ${HOSTPREFIX}:$PWD $daospath
+sudo mount -t nfs ${HOSTPREFIX:-bmurrell-mobl}:$PWD $daospath
 sudo mount -t tmpfs -o size=16G tmpfs /mnt/daos
 df -h /mnt/daos" 2>&1 | dshbak -c
 
