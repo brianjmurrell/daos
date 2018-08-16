@@ -29,6 +29,7 @@ pipeline {
                         sh '''rm -rf _build.external install
                               pushd scons_local
                               git pull https://review.hpdd.intel.com/coral/scons_local refs/changes/13/33013/3
+                              git pull https://review.hpdd.intel.com/coral/scons_local refs/changes/22/33022/1
                               popd
                               git submodule update --init --recursive
                               utils/fetch_go_packages.sh -i .
