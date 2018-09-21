@@ -4,6 +4,17 @@ pipeline {
 
     environment {
         SHELL = '/bin/bash'
+        HTTP_PROXY = "${env.HTTP_PROXY}"
+        HTTPS_PROXY = "${env.HTTPS_PROXY}"
+        DBA1 = '--build-arg NOBUILD=1'
+        DBA2 = ' --build-arg UID=$(id -u)'
+        DBA3 = ' --build-arg DONT_USE_RPMS=false'
+        DBA4 = ' --build-arg HTTP_PROXY=\"\${HTTP_PROXY}\"'
+        DBA5 = ' --build-arg HTTPS_PROXY=\"\${HTTPS_PROXY}\"'
+        DBA2A = ' --build-arg UID=\$(id -u)'
+
+        DEF_BUILD_ARGS = "${DBA1}${DBA2}${DBA3}${DBA4}${DBA5}"
+        DEF_BUILD_ARGSA = "${DBA1}${DBA2A}${DBA3}${DBA4}${DBA5}"
     }
 
     // triggers {
@@ -20,6 +31,14 @@ pipeline {
     }
 
     stages {
+        stage('dump-env') {
+            agent { label 'docker_runner' }
+            steps {
+                sh 'printenv'
+                sh 'echo "${DEF_BUILD_ARGSA}"'
+                sh 'echo "${DBA4}${DBA5}"'
+            }
+        }
         stage('Pre-build') {
             parallel {
                 stage('check_modules.sh') {
@@ -28,7 +47,7 @@ pipeline {
                             filename 'Dockerfile.centos:7'
                             dir 'utils/docker'
                             label 'docker_runner'
-                            additionalBuildArgs  '--build-arg NOBUILD=1 --build-arg UID=$(id -u) --build-arg DONT_USE_RPMS=false'
+                            additionalBuildArgs '--build-arg NOBUILD=1 --build-arg UID=$(id -u) --build-arg DONT_USE_RPMS=false  --build-arg HTTP_PROXY=\\"${HTTP_PROXY}\\" --build-arg http_proxy=\\"${HTTP_PROXY}\\" --build-arg HTTPS_PROXY=\\"${HTTPS_PROXY}\\" --build-arg https_proxy=\\"${HTTPS_PROXY}\\"'
                         }
                     }
                     steps {
@@ -61,7 +80,7 @@ pipeline {
                             filename 'Dockerfile.centos:7'
                             dir 'utils/docker'
                             label 'docker_runner'
-                            additionalBuildArgs  '--build-arg NOBUILD=1 --build-arg UID=$(id -u) --build-arg DONT_USE_RPMS=false'
+                            additionalBuildArgs  '--build-arg NOBUILD=1 --build-arg UID=$(id -u) --build-arg DONT_USE_RPMS=false  --build-arg HTTP_PROXY=\\"${HTTP_PROXY}\\" --build-arg http_proxy=\\"${HTTP_PROXY}\\" --build-arg HTTPS_PROXY=\\"${HTTPS_PROXY}\\" --build-arg https_proxy=\\"${HTTPS_PROXY}\\"'
                         }
                     }
                     steps {
@@ -102,7 +121,7 @@ pipeline {
                             filename 'Dockerfile.ubuntu:18.04'
                             dir 'utils/docker'
                             label 'docker_runner'
-                            additionalBuildArgs  '--build-arg NOBUILD=1 --build-arg UID=$(id -u) --build-arg DONT_USE_RPMS=false'
+                            additionalBuildArgs  '--build-arg NOBUILD=1 --build-arg UID=$(id -u) --build-arg DONT_USE_RPMS=false  --build-arg HTTP_PROXY=\\"${HTTP_PROXY}\\" --build-arg http_proxy=\\"${HTTP_PROXY}\\" --build-arg HTTPS_PROXY=\\"${HTTPS_PROXY}\\" --build-arg https_proxy=\\"${HTTPS_PROXY}\\"'
                         }
                     }
                     steps {
