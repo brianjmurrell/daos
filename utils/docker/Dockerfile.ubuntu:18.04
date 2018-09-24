@@ -15,6 +15,13 @@ ARG NOBUILD
 # use same UID as host and default value of 1000 if not specified
 ARG UID=1000
 
+RUN if [ -n "${HTTP_PROXY}" ]; then \
+  prx1=${HTTP_PROXY#\"};prx2=${prx1%\"}; \
+  printf "Acquire::http::Proxy \"%s/\";\n" ${prx2} >> \
+    /etc/apt/apt.conf; fi
+
+RUN printf "\n\n"; cat /etc/apt/apt.conf || printf "\n\n"
+
 # Update distribution
 RUN apt-get update
 
@@ -42,6 +49,10 @@ RUN chown daos.daos /mnt/daos
 # Switch to new user
 USER $USER
 WORKDIR /home/$USER
+
+RUN if [ -n "${HTTP_PROXY}" ]; then \
+  git config --global http.proxy "${HTTP_PROXY}"; \
+  printf "proxy = %s\n" "${HTTP_PROXY##*/}" >> ~/.curlrc; fi
 
 # Fetch DAOS code
 RUN if [ "x$NOBUILD" = "x" ] ; then git clone https://github.com/daos-stack/daos.git; fi
