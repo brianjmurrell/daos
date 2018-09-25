@@ -1,11 +1,21 @@
-// My copy
+#!/usr/bin/env groovy
+
+void docker_agent(name) {
+    dockerfile {
+        filename name
+        dir 'utils/docker'
+        label 'docker_runner'
+        additionalBuildArgs '--build-arg NOBUILD=1 --build-arg UID=$(id -u) --build-arg DONT_USE_RPMS=false  --build-arg HTTP_PROXY=\\"${HTTP_PROXY}\\" --build-arg http_proxy=\\"${HTTP_PROXY}\\" --build-arg HTTPS_PROXY=\\"${HTTPS_PROXY}\\" --build-arg https_proxy=\\"${HTTPS_PROXY}\\"'
+    }
+}
+
 pipeline {
     agent none
 
     environment {
         SHELL = '/bin/bash'
-        HTTP_PROXY = "${env.HTTP_PROXY}"
-        HTTPS_PROXY = "${env.HTTPS_PROXY}"
+        BAHTTPS_PROXY = "${env.HTTP_PROXY ? '--build-arg HTTP_PROXY="' + env.HTTP_PROXY + '" --build-arg http_proxy="' + env.HTTP_PROXY + '"' : ''}"
+        BAHTTP_PROXY = "${env.HTTP_PROXY ? '--build-arg HTTPS_PROXY="' + env.HTTPS_PROXY + '" --build-arg https_proxy="' + env.HTTPS_PROXY + '"' : ''}"
         DBA1 = '--build-arg NOBUILD=1'
         DBA2 = ' --build-arg UID=$(id -u)'
         DBA3 = ' --build-arg DONT_USE_RPMS=false'
@@ -34,7 +44,7 @@ pipeline {
         stage('dump-env') {
             agent { label 'docker_runner' }
             steps {
-                sh 'printenv'
+                sh 'export'
                 sh 'echo "${DEF_BUILD_ARGSA}"'
                 sh 'echo "${DBA4}${DBA5}"'
             }
@@ -47,7 +57,7 @@ pipeline {
                             filename 'Dockerfile.centos:7'
                             dir 'utils/docker'
                             label 'docker_runner'
-                            additionalBuildArgs '--build-arg NOBUILD=1 --build-arg UID=$(id -u) --build-arg DONT_USE_RPMS=false  --build-arg HTTP_PROXY=\\"${HTTP_PROXY}\\" --build-arg http_proxy=\\"${HTTP_PROXY}\\" --build-arg HTTPS_PROXY=\\"${HTTPS_PROXY}\\" --build-arg https_proxy=\\"${HTTPS_PROXY}\\"'
+                            additionalBuildArgs '--build-arg NOBUILD=1 --build-arg UID=$(id -u) --build-arg DONT_USE_RPMS=false ${BAHTTP_PROXY} ${BAHTTPS_PROXY}'
                         }
                     }
                     steps {
@@ -80,9 +90,9 @@ pipeline {
                             filename 'Dockerfile.centos:7'
                             dir 'utils/docker'
                             label 'docker_runner'
-                            additionalBuildArgs  '--build-arg NOBUILD=1 --build-arg UID=$(id -u) --build-arg DONT_USE_RPMS=false  --build-arg HTTP_PROXY=\\"${HTTP_PROXY}\\" --build-arg http_proxy=\\"${HTTP_PROXY}\\" --build-arg HTTPS_PROXY=\\"${HTTPS_PROXY}\\" --build-arg https_proxy=\\"${HTTPS_PROXY}\\"'
+                            additionalBuildArgs  '--build-arg NOBUILD=1 --build-arg UID=$(id -u) --build-arg DONT_USE_RPMS=false ${BAHTTP_PROXY} ${BAHTTPS_PROXY}'
                         }
-                    }
+                    } // agent
                     steps {
                         githubNotify description: 'CentOS 7 Build',  context: 'build/centos7', status: 'PENDING'
                         checkout scm
@@ -105,7 +115,7 @@ pipeline {
                         stash name: 'CentOS-install', includes: 'install/**'
                         stash name: 'CentOS-build-vars', includes: '.build_vars.*'
                         stash name: 'CentOS-tests', includes: 'build/src/rdb/raft/src/tests_main, build/src/common/tests/btree_direct, build/src/common/tests/btree, src/common/tests/btree.sh, build/src/common/tests/sched, build/src/client/api/tests/eq_tests, src/vos/tests/evt_ctl.sh, build/src/vos/vea/tests/vea_ut, src/rdb/raft_tests/raft_tests.py'
-                    }
+                    } // steps
                     post {
                         success {
                             githubNotify description: 'CentOS 7 Build',  context: 'build/centos7', status: 'SUCCESS'
@@ -113,17 +123,17 @@ pipeline {
                         unstable {
                             githubNotify description: 'CentOS 7 Build',  context: 'build/centos7', status: 'FAILURE'
                         }
-                    }
-                }
+                    } // post
+                } // stage
                 stage('Build on Ubuntu 18.04') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.ubuntu:18.04'
                             dir 'utils/docker'
                             label 'docker_runner'
-                            additionalBuildArgs  '--build-arg NOBUILD=1 --build-arg UID=$(id -u) --build-arg DONT_USE_RPMS=false  --build-arg HTTP_PROXY=\\"${HTTP_PROXY}\\" --build-arg http_proxy=\\"${HTTP_PROXY}\\" --build-arg HTTPS_PROXY=\\"${HTTPS_PROXY}\\" --build-arg https_proxy=\\"${HTTPS_PROXY}\\"'
+                            additionalBuildArgs  '--build-arg NOBUILD=1 --build-arg UID=$(id -u) --build-arg DONT_USE_RPMS=false ${BAHTTP_PROXY} ${BAHTTPS_PROXY}'
                         }
-                    }
+                    } // agent
                     steps {
                         githubNotify description: 'Ubuntu 18 Build',  context: 'build/ubuntu18', status: 'PENDING'
                         checkout scm
@@ -140,7 +150,7 @@ pipeline {
                                       exit \$rc
                                   fi
                               fi'''
-                    }
+                    } // steps
                     post {
                         success {
                             githubNotify description: 'Ubuntu 18 Build',  context: 'build/ubuntu18', status: 'SUCCESS'
@@ -148,11 +158,11 @@ pipeline {
                         unstable {
                             githubNotify description: 'Ubuntu 18 Build',  context: 'build/ubuntu18', status: 'FAILURE'
                         }
-                    }
-                }
-            }
-        }
-        stage('Test') {
+                    } // post
+                } // stage('Build on Ubuntu 18.04')
+            } // parallel
+        } // stage('Build')
+/*        stage('Test') {
             parallel {
                 stage('Functional quick') {
                     agent {
@@ -172,7 +182,8 @@ pipeline {
                     post {
                         always {
                             archiveArtifacts artifacts: 'daos-Functional-quick.log, src/tests/ftest/avocado/job-results/**'
-                            junit 'src/tests/ftest/avocado/job-results/*/results.xml'
+                            // replaced * below with a # for commenting out the block
+                            junit 'src/tests/ftest/avocado/job-results/#/results.xml'
                         }
                         success {
                             githubNotify description: 'Functional quick',  context: 'test/functional_quick', status: 'SUCCESS'
@@ -182,7 +193,7 @@ pipeline {
                         }
                     }
                 }
-                /* stage('run_test.sh') {
+                stage('run_test.sh') {
                     agent {
                         label 'single'
                     }
@@ -208,8 +219,8 @@ pipeline {
                             githubNotify description: 'run_test.sh',  context: 'test/run_test.sh', status: 'FAILURE'
                         }
                     }
-                } */
-                /* stage('DaosTestMulti All') {
+                }
+                stage('DaosTestMulti All') {
                     agent {
                         label 'cluster_provisioner'
                     }
@@ -235,8 +246,7 @@ pipeline {
                             githubNotify description: 'DaosTestMulti All',  context: 'test/daostestmulti_all', status: 'FAILURE'
                         }
                     }
-                } */
-                /*
+                }
                 stage('DaosTestMulti Degraded') {
                     agent {
                         label 'cluster_provisioner'
@@ -263,8 +273,7 @@ pipeline {
                             githubNotify description: 'DaosTestMulti Degraded',  context: 'test/daostestmulti_degraded', status: 'FAILURE'
                         }
                     }
-                } */
-                /*
+                }
                 stage('DaosTestMulti Rebuild') {
                     agent {
                         label 'cluster_provisioner'
@@ -292,8 +301,7 @@ pipeline {
                         }
                     }
                 }
-                */
-            }
-        }
-    }
-}
+            } // parallel
+        } */ // stage('Test')
+    } // stages
+} // pipeline
