@@ -25,6 +25,8 @@ pipeline {
 
         DEF_BUILD_ARGS = "${DBA1}${DBA2}${DBA3}${DBA4}${DBA5}"
         DEF_BUILD_ARGSA = "${DBA1}${DBA2A}${DBA3}${DBA4}${DBA5}"
+        UID=sh(script: "id -u", returnStdout: true)
+        BUILDARGS = "--build-arg NOBUILD=1 --build-arg UID=$env.UID --build-arg DONT_USE_RPMS=false $env.BAHTTP_PROXY $env.BAHTTPS_PROXY"
     }
 
     // triggers {
@@ -57,7 +59,7 @@ pipeline {
                             filename 'Dockerfile.centos:7'
                             dir 'utils/docker'
                             label 'docker_runner'
-                            additionalBuildArgs '--build-arg NOBUILD=1 --build-arg UID=$(id -u) --build-arg DONT_USE_RPMS=false ${BAHTTP_PROXY} ${BAHTTPS_PROXY}'
+                            additionalBuildArgs '$BUILDARGS'
                         }
                     }
                     steps {
@@ -90,7 +92,7 @@ pipeline {
                             filename 'Dockerfile.centos:7'
                             dir 'utils/docker'
                             label 'docker_runner'
-                            additionalBuildArgs  '--build-arg NOBUILD=1 --build-arg UID=$(id -u) --build-arg DONT_USE_RPMS=false ${BAHTTP_PROXY} ${BAHTTPS_PROXY}'
+                            additionalBuildArgs '$BUILDARGS'
                         }
                     } // agent
                     steps {
@@ -131,7 +133,7 @@ pipeline {
                             filename 'Dockerfile.ubuntu:18.04'
                             dir 'utils/docker'
                             label 'docker_runner'
-                            additionalBuildArgs  '--build-arg NOBUILD=1 --build-arg UID=$(id -u) --build-arg DONT_USE_RPMS=false ${BAHTTP_PROXY} ${BAHTTPS_PROXY}'
+                            additionalBuildArgs '$BUILDARGS'
                         }
                     } // agent
                     steps {
