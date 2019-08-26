@@ -4,7 +4,7 @@ echo "Environment:"
 env
 
 if release=$(git log --format=%B -n 1 | sed -n '/^[Rr]elease:/s/^[Rr]elease: *//p'); then
-    echo "Release requested is: $release"
+    echo "Release requested is: >$release<"
 else
     echo "No release request"
     exit 0
