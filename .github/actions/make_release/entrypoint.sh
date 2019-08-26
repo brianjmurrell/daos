@@ -4,6 +4,8 @@ echo "Environment:"
 env
 
 if release=$(git log --format=%B -n 1 | sed -n '/^[Rr]elease:/s/^[Rr]elease: *//p'); then
+    # strip off any trailing CRs or NLs
+    release=$(echo "$release" | tr -d '\r\n')
     echo "Release requested is: >$release<"
 else
     echo "No release request"
