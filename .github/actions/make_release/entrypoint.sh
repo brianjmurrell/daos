@@ -10,6 +10,14 @@ if ! git diff-index --name-only HEAD^ | grep -q VERSION; then
      exit 0
 fi
 
+# Don't create a release for the first time the VERSION file is
+# added as that point is most surely not an actual release.
+if git diff-tree --diff-filter=A --no-commit-id --name-status -r HEAD |
+   grep -q VERSION; then
+     echo "VERSION being added not updated, exiting"
+     exit 0
+fi
+
 release=$(cat VERSION)
 
 # Ensure that the GITHUB_TOKEN secret is included
