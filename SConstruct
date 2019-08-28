@@ -23,7 +23,7 @@ PP_ONLY_FLAGS = ['-Wno-parentheses-equality', '-Wno-builtin-requires-header',
 def get_version():
 
     with open("VERSION", "r") as version_file:
-        return version_file.read()
+        return version_file.read().rstrip()
 
 DAOS_VERSION = get_version()
 
