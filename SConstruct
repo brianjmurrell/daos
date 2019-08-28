@@ -95,8 +95,8 @@ def preload_prereqs(prereqs):
 
 def scons():
     if COMMAND_LINE_TARGETS == ['release']:
-        org_name = "daos-stack"
-        remote_name = "origin"
+        org_name = "brianjmurrell"
+        remote_name = "mine"
         try:
             import pygit2
             import github
