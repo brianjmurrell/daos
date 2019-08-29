@@ -133,7 +133,13 @@ def scons():
         repo = pygit2.Repository('.git')
         master = repo.lookup_reference(
             'refs/remotes/{}/master'.format(remote_name))
-        repo.branches.create(branch, repo[master.target])
+        try:
+            repo.branches.create(branch, repo[master.target])
+        except pygit2.AlreadyExistsError:
+            print("Branch {} exists in GitHub already\n"
+                 "See https://github.com/{}/daos/branches".format(branch,
+                                                                  org_name))
+            exit(1)
 
         # and check it out
         print("Checking out branch for the PR...")
