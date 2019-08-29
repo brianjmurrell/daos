@@ -229,7 +229,7 @@ def scons():
         me = gh_context.get_user()
         print(me)
         print(me.login)
-        me = gh_context,get_user(me.login)
+        me = gh_context,get_user(str(me.login))
         print(me)
         print(me.login)
         new_pr.as_issue().add_to_assignees(me)
