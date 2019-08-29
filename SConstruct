@@ -226,12 +226,7 @@ def scons():
 
         print("Self-assigning the PR...")
         # self-assign the PR
-        me = gh_context.get_user()
-        print(me)
-        print(me.login)
-        me = gh_context,get_user(login='brianjmurrell')
-        print(me)
-        print(me.login)
+        me = gh_context.get_user(gh_context.get_user().login)
         new_pr.as_issue().add_to_assignees(me)
 
         print("Done.")
