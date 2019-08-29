@@ -152,7 +152,10 @@ def scons():
         index.read()
         author = repo.default_signature
         committer = repo.default_signature
-        message = "Update version to v{}\n".format(version)
+        message = "Update version to v{}\n\n"
+                  "Signed-off-by: {} <{}>".format(version,
+                                                  repo.default_signature.name,
+                                                  repo.default_signature.email)
         index.add("utils/rpms/daos.spec")
         index.add("VERSION")
         index.write()
