@@ -219,17 +219,17 @@ def scons():
         new_pr = repo.create_pull(title=summary, body="", base="master",
                                   head="{}:{}".format(org_name, branch))
 
-        print("Successfully created PR#{} for this version "
+        print("Successfully created PR#{0} for this version "
               "update:\n"
-              "https://github.com/{}/daos/pull/12/".format(new_pr.number,
-                                                           org_name))
+              "https://github.com/{1}/daos/pull/{0}/".format(new_pr.number,
+                                                             org_name))
 
         print("Self-assigning the PR...")
         # self-assign the PR
         me = gh_context.get_user()
         print(me)
         print(me.login)
-        me = gh_context,get_user(login=me.login)
+        me = gh_context,get_user(me.login)
         print(me)
         print(me.login)
         new_pr.as_issue().add_to_assignees(me)
