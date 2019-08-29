@@ -214,7 +214,10 @@ def scons():
                                   head="{}:{}".format(org_name, branch))
 
         # self-assign the PR
-        new_pr.as_issue().add_to_assignees(gh_context.get_user())
+        me = gh_context.get_user()
+        print(me)
+        print(me.login)
+        new_pr.as_issue().add_to_assignees(me)
 
         print("Successfully created PR#{} for this version "
               "update:\n"
