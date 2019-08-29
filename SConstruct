@@ -152,8 +152,9 @@ def scons():
         index.read()
         author = repo.default_signature
         committer = repo.default_signature
-        message = "Update version to v{}\n\n" \
-                  "Signed-off-by: {} <{}>".format(version,
+        summary = "Update version to v{}".format(version)
+        message = "{}\n\n" \
+                  "Signed-off-by: {} <{}>".format(summary,
                                                   repo.default_signature.name,
                                                   repo.default_signature.email)
         index.add("utils/rpms/daos.spec")
@@ -209,11 +210,16 @@ def scons():
         except github.UnknownObjectException:
             # maybe not an organization
             repo = gh_context.get_repo('{}/daos'.format(org_name))
-        new_pr = repo.create_pull(title=message, body="", base="master",
+        new_pr = repo.create_pull(title=summary, body="", base="master",
                                   head="{}:{}".format(org_name, branch))
 
+        # self-assign the PR
+        new_pr.as_issue().add_to_assignees(gh_context.get_user())
+
         print("Successfully created PR#{} for this version "
-              "update".format(new_pr.number))
+              "update:\n"
+              "https://github.com/{}/daos/pull/12/".format(new_pr.number,
+                                                           org_name))
 
         exit(0)
 
