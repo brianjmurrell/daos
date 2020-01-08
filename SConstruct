@@ -130,14 +130,19 @@ def scons():
             print("Usage: scons RELEASE=x.y.z release")
             exit(1)
 
+        try:
+            base_branch = env['RELEASE_BASE']
+        except KeyError:
+            base_branch = "master"
+
         # create a branch for the PR
         branch = 'create-release-{}'.format(version)
         print("Creating a branch for the PR...")
         repo = pygit2.Repository('.git')
-        master = repo.lookup_reference(
-            'refs/remotes/{}/master'.format(remote_name))
+        base_ref = repo.lookup_reference(
+            'refs/remotes/{}/{}'.format(remote_name, base_branch))
         try:
-            repo.branches.create(branch, repo[master.target])
+            repo.branches.create(branch, repo[base_ref.target])
         except pygit2.AlreadyExistsError: # pylint: disable=no-member
             print("Branch {} exists in GitHub already\n"
                   "See https://github.com/{}/daos/branches".format(branch,
@@ -221,7 +226,7 @@ def scons():
         except github.UnknownObjectException:
             # maybe not an organization
             repo = gh_context.get_repo('{}/daos'.format(org_name))
-        new_pr = repo.create_pull(title=summary, body="", base="master",
+        new_pr = repo.create_pull(title=summary, body="", base=base_branch,
                                   head="{}:{}".format(org_name, branch))
 
         print("Successfully created PR#{0} for this version "
