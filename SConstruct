@@ -98,8 +98,19 @@ def preload_prereqs(prereqs):
 
 def scons():
     if COMMAND_LINE_TARGETS == ['release']:
-        org_name = "daos-stack"
-        remote_name = "origin"
+        variables = Variables()
+
+        variables.Add('RELEASE', 'Set to the release version to make', None)
+        variables.Add('RELEASE_BASE', 'Set to the release version to make', 'master')
+        variables.Add('ORG_NAME', 'The GitHub project to do the release on.', 'daos-stack')
+        variables.Add('REMOTE_NAME', 'The remoten name release on.', 'origin')
+
+        env = Environment(variables=variables)
+
+        org_name = env['ORG_NAME']
+        remote_name = env['REMOTE_NAME']
+        base_branch = env['RELEASE_BASE']
+
         try:
             import pygit2
             import github
@@ -121,9 +132,6 @@ def scons():
                 exit(1)
             raise
 
-        variables = Variables()
-        variables.Add('RELEASE', 'Set to the release version to make', None)
-        env = Environment(variables=variables)
         try:
             version = env['RELEASE']
         except KeyError:
@@ -134,14 +142,20 @@ def scons():
         branch = 'create-release-{}'.format(version)
         print("Creating a branch for the PR...")
         repo = pygit2.Repository('.git')
-        master = repo.lookup_reference(
-            'refs/remotes/{}/master'.format(remote_name))
         try:
-            repo.branches.create(branch, repo[master.target])
+            base_ref = repo.lookup_reference(
+                'refs/remotes/{}/{}'.format(remote_name, base_branch))
+        except KeyError:
+            print("Branch {}/{} is not a valid branch\n"
+                  "See https://github.com/{}/daos/branches".format(
+                      remote_name, base_branch, org_name))
+            exit(1)
+        try:
+            repo.branches.create(branch, repo[base_ref.target])
         except pygit2.AlreadyExistsError: # pylint: disable=no-member
-            print("Branch {} exists in GitHub already\n"
-                  "See https://github.com/{}/daos/branches".format(branch,
-                                                                   org_name))
+            print("Branch {}/{}/{} exists in GitHub already\n"
+                  "See https://github.com/{}/daos/branches".format(
+                      remote_name, base_branch, branch, org_name))
             exit(1)
 
         # and check it out
@@ -221,7 +235,7 @@ def scons():
         except github.UnknownObjectException:
             # maybe not an organization
             repo = gh_context.get_repo('{}/daos'.format(org_name))
-        new_pr = repo.create_pull(title=summary, body="", base="master",
+        new_pr = repo.create_pull(title=summary, body="", base=base_branch,
                                   head="{}:{}".format(org_name, branch))
 
         print("Successfully created PR#{0} for this version "
