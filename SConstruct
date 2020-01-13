@@ -27,14 +27,28 @@ def get_version():
 
 DAOS_VERSION = get_version()
 
-def update_rpm_version(version):
+def update_rpm_version(version, tag):
     """ Update the version (and release) in the RPM specfile """
     spec = open("utils/rpms/daos.spec", "r").readlines()
+    current_version = 0
+    release = 0
     for line_num, line in enumerate(spec):
         if line.startswith("Version:"):
-            spec[line_num] = "Version:       {}\n".format(version)
+            current_version = line[line.rfind(' ')+1:].rstrip()
+            if version < current_version:
+                print("You cannot create a new verison ({}) lower than the RPM "
+                      "spec file has currently ({})".format(version,
+                                                            current_version))
+                return False
+            elif version > current_version:
+                spec[line_num] = "Version:       {}\n".format(version)
         if line.startswith("Release:"):
-            spec[line_num] = "Release:       1%{?relval}%{?dist}\n"
+            if version == current_version:
+                current_release = int(line[line.rfind(' ')+1:line.find('%')])
+                release = current_release + 1
+            else:
+                release = 1
+            spec[line_num] = "Release:       {}%{{?relval}}%{{?dist}}\n".format(release)
         if line == "%changelog\n":
             try:
                 packager = subprocess.Popen(
@@ -47,17 +61,20 @@ def update_rpm_version(version):
                       "~/.rpmmacros as such:\n"
                       "%packager	John A. Doe <john.doe@intel.com>"
                       "so that package changelog entries are well defined")
-                exit(1)
+                return False
             date_str = time.strftime('%a %b %d %Y', time.gmtime())
             spec.insert(line_num + 1, "\n")
             spec.insert(line_num + 1,
-                        "- Version bump up to {}\n".format(version))
+                        "- Version bump up to {}\n".format(tag))
             spec.insert(line_num + 1,
-                        u'* {} {} - {}-1\n'.format(date_str,
-                                                   packager,
-                                                   version))
+                        u'* {} {} - {}-{}\n'.format(date_str,
+                                                    packager,
+                                                    version,
+                                                    release))
             break
     open("utils/rpms/daos.spec", "w").writelines(spec)
+
+    return True
 
 def is_platform_arm():
     """Detect if platform is ARM"""
@@ -98,8 +115,19 @@ def preload_prereqs(prereqs):
 
 def scons():
     if COMMAND_LINE_TARGETS == ['release']:
-        org_name = "daos-stack"
-        remote_name = "origin"
+        variables = Variables()
+
+        variables.Add('RELEASE', 'Set to the release version to make', None)
+        variables.Add('RELEASE_BASE', 'Set to the release version to make', 'master')
+        variables.Add('ORG_NAME', 'The GitHub project to do the release on.', 'daos-stack')
+        variables.Add('REMOTE_NAME', 'The remoten name release on.', 'origin')
+
+        env = Environment(variables=variables)
+
+        org_name = env['ORG_NAME']
+        remote_name = env['REMOTE_NAME']
+        base_branch = env['RELEASE_BASE']
+
         try:
             import pygit2
             import github
@@ -121,39 +149,53 @@ def scons():
                 exit(1)
             raise
 
-        variables = Variables()
-        variables.Add('RELEASE', 'Set to the release version to make', None)
-        env = Environment(variables=variables)
         try:
-            version = env['RELEASE']
+            tag = env['RELEASE']
         except KeyError:
             print("Usage: scons RELEASE=x.y.z release")
             exit(1)
 
+        dash = tag.find('-')
+        if dash > 0:
+            version = tag[0:dash]
+        else:
+            version = tag
+
         # create a branch for the PR
-        branch = 'create-release-{}'.format(version)
+        branch = 'create-release-{}'.format(tag)
         print("Creating a branch for the PR...")
         repo = pygit2.Repository('.git')
-        master = repo.lookup_reference(
-            'refs/remotes/{}/master'.format(remote_name))
         try:
-            repo.branches.create(branch, repo[master.target])
+            base_ref = repo.lookup_reference(
+                'refs/remotes/{}/{}'.format(remote_name, base_branch))
+        except KeyError:
+            print("Branch {}/{} is not a valid branch\n"
+                  "See https://github.com/{}/daos/branches".format(
+                      remote_name, base_branch, org_name))
+            exit(1)
+        try:
+            repo.branches.create(branch, repo[base_ref.target])
         except pygit2.AlreadyExistsError: # pylint: disable=no-member
-            print("Branch {} exists in GitHub already\n"
-                  "See https://github.com/{}/daos/branches".format(branch,
-                                                                   org_name))
+            print("Branch {}/{}/{} exists in GitHub already\n"
+                  "See https://github.com/{}/daos/branches".format(
+                      remote_name, base_branch, branch, org_name))
             exit(1)
 
         # and check it out
         print("Checking out branch for the PR...")
         repo.checkout(repo.lookup_branch(branch))
 
-        print("Updating the VERSION file...")
+        print("Updating the RPM specfile...")
+        if not update_rpm_version(version, tag):
+            print("Branch has been left in the created state.  You will have to "
+                  "clean it up manually.")
+            exit(1)
+
+        print("Updating the VERSION and TAG files...")
         with open("VERSION", "w") as version_file:
             version_file.write(version + '\n')
-
-        print("Updating the RPM specfile...")
-        update_rpm_version(version)
+        with open("TAG", "w") as version_file:
+            version_file.write(tag + '\n')
 
         print("Committing the changes...")
         # now create the commit
@@ -161,7 +203,7 @@ def scons():
         index.read()
         author = repo.default_signature
         committer = repo.default_signature
-        summary = "Update version to v{}".format(version)
+        summary = "Update version to v{}".format(tag)
         # pylint: disable=no-member
         message = "{}\n\n" \
                   "Signed-off-by: {} <{}>".format(summary,
@@ -170,6 +212,7 @@ def scons():
         # pylint: enable=no-member
         index.add("utils/rpms/daos.spec")
         index.add("VERSION")
+        index.add("TAG")
         index.write()
         tree = index.write_tree()
         # pylint: disable=no-member
@@ -221,7 +264,7 @@ def scons():
         except github.UnknownObjectException:
             # maybe not an organization
             repo = gh_context.get_repo('{}/daos'.format(org_name))
-        new_pr = repo.create_pull(title=summary, body="", base="master",
+        new_pr = repo.create_pull(title=summary, body="", base=base_branch,
                                   head="{}:{}".format(org_name, branch))
 
         print("Successfully created PR#{0} for this version "
