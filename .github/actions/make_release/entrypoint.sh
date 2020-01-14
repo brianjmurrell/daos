@@ -1,4 +1,4 @@
-#!/bin/sh -l
+#!/bin/bash -l
 
 # Only need to do any of this if the version has been updated
 # NOTE: The diff-index with HEAD^ implies that the TAG
@@ -20,6 +20,11 @@ fi
 
 release=$(cat TAG)
 
+if [[ $release = *-* ]]; then
+    prerelease="true"
+else
+    prerelease="false"
+fi
 # Ensure that the GITHUB_TOKEN secret is included
 if [ -z "$GITHUB_TOKEN" ]; then
   echo "Set the GITHUB_TOKEN env variable."
@@ -32,7 +37,7 @@ json="{
   \"name\": \"Release $release\",
   \"body\": \"DAOS release $release\",
   \"draft\": false,
-  \"prerelease\": false
+  \"prerelease\": $prerelease
 }"
 
 curl --request POST \
