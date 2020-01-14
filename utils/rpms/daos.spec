@@ -8,7 +8,7 @@
 
 Name:          daos
 Version:       0.8.1
-Release:       1%{?relval}%{?dist}
+Release:       2%{?relval}%{?dist}
 Summary:       DAOS Storage Engine
 
 License:       Apache
@@ -333,6 +333,9 @@ getent group daos_admins >/dev/null || groupadd -r daos_admins
 %{_libdir}/*.a
 
 %changelog
+* Tue Jan 14 2020 Brian J. Murrell <brian.murrell@intel.com> - 0.8.1-2
+- Version bump up to 0.8.1-rc2
+
 * Tue Jan 14 2020 Brian J. Murrell <brian.murrell@intel.com> - 0.8.1-1
 - Version bump up to 0.8.1
 
