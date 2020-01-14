@@ -145,7 +145,7 @@ def scons():
             version = tag
 
         # create a branch for the PR
-        branch = 'create-release-{}'.format(version)
+        branch = 'create-release-{}'.format(tag)
         print("Creating a branch for the PR...")
         repo = pygit2.Repository('.git')
         try:
@@ -183,7 +183,7 @@ def scons():
         index.read()
         author = repo.default_signature
         committer = repo.default_signature
-        summary = "Update version to v{}".format(version)
+        summary = "Update version to v{}".format(tag)
         # pylint: disable=no-member
         message = "{}\n\n" \
                   "Signed-off-by: {} <{}>".format(summary,
@@ -192,6 +192,7 @@ def scons():
         # pylint: enable=no-member
         index.add("utils/rpms/daos.spec")
         index.add("VERSION")
+        index.add("TAG")
         index.write()
         tree = index.write_tree()
         # pylint: disable=no-member
