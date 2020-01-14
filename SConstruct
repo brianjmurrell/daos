@@ -133,10 +133,16 @@ def scons():
             raise
 
         try:
-            version = env['RELEASE']
+            tag = env['RELEASE']
         except KeyError:
             print("Usage: scons RELEASE=x.y.z release")
             exit(1)
+
+        dash = tag.find('-')
+        if dash > 0:
+            version = tag[0:dash]
+        else:
+            version = tag
 
         # create a branch for the PR
         branch = 'create-release-{}'.format(version)
@@ -162,9 +168,11 @@ def scons():
         print("Checking out branch for the PR...")
         repo.checkout(repo.lookup_branch(branch))
 
-        print("Updating the VERSION file...")
+        print("Updating the VERSION and TAG files...")
         with open("VERSION", "w") as version_file:
             version_file.write(version + '\n')
+        with open("TAG", "w") as version_file:
+            version_file.write(tag + '\n')
 
         print("Updating the RPM specfile...")
         update_rpm_version(version)
