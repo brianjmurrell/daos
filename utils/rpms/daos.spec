@@ -182,13 +182,13 @@ rpath_files="utils/daos_build.py"
 rpath_files+=" $(find . -name SConscript)"
 sed -i -e '/AppendUnique(RPATH=.*)/d' $rpath_files
 
-scons %{?no_smp_mflags}    \
+scons %{?smp_mflags}       \
       --config=force       \
       USE_INSTALLED=all    \
       PREFIX=%{?buildroot}
 
 %install
-scons %{?no_smp_mflags}              \
+scons %{?smp_mflags}                 \
       --config=force                 \
       install                        \
       USE_INSTALLED=all              \
