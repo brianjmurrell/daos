@@ -7,7 +7,7 @@
 %global spdk_max_version 1000
 
 Name:          daos
-Version:       0.8.0
+Version:       0.8.1
 Release:       1%{?relval}%{?dist}
 Summary:       DAOS Storage Engine
 
@@ -182,13 +182,13 @@ rpath_files="utils/daos_build.py"
 rpath_files+=" $(find . -name SConscript)"
 sed -i -e '/AppendUnique(RPATH=.*)/d' $rpath_files
 
-scons %{?no_smp_mflags}    \
+scons %{?smp_mflags}       \
       --config=force       \
       USE_INSTALLED=all    \
       PREFIX=%{?buildroot}
 
 %install
-scons %{?no_smp_mflags}              \
+scons %{?smp_mflags}                 \
       --config=force                 \
       install                        \
       USE_INSTALLED=all              \
@@ -333,6 +333,9 @@ getent group daos_admins >/dev/null || groupadd -r daos_admins
 %{_libdir}/*.a
 
 %changelog
+* Wed Jan 15 2020 Brian J. Murrell <brian.murrell@intel.com> - 0.8.1-1
+- Version bump up to 0.8.1-rc1
+
 * Tue Dec 17 2019 Johann Lombardi <johann.lombardi@intel.com> - 0.8.0-1
 - Version bump up to 0.8.0
 
